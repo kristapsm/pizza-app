@@ -1,0 +1,101 @@
+<div class="row add-pizza">
+    <div class="col-xs-12">
+    <h2 class="col-sm-offset-2">Add a pizza</h2>
+    <hr />
+    <form name="pizzaForm" class="form-horizontal" ng-submit="submit()">
+        <div ng-show="submited" class="alert alert-{{ submited.type }} col-sm-offset-2 alert-dismissable">{{ submited.msg }}</div>
+        <div class="form-group">
+            <label for="name" class="col-sm-2 control-label">Name</label>
+            <div class="col-sm-5">
+                <input ng-required="true" ng-model="pizza.name" ng-maxlength="50" ng-minlength="3"
+                    type="text" class="form-control" id="name" placeholder="Name">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="kind" class="col-sm-2 control-label">Type</label>
+            <div class="col-sm-5">
+				<dualselectlist id="kinds" ng-Model="pizza.kinds" options="i as i.name for i in kinds"></dualselectlist>
+				<input name="pizzakinds" type="hidden" ng-model="pizza.kinds" ng-required="true" check-compability  empty-array/>
+            </div>
+			<div ng-show="pizzaForm.pizzakinds.$error.incompatible" class="col-sm-5 alert alert-danger alert-dismissable">
+				The selected ingredients are not compatible with the selected kinds! Please, remove it!
+			</div>
+			<div ng-show="pizzaForm.pizzakinds.$error.emptyarr" class="col-sm-5 alert alert-danger alert-dismissable">
+				At least 1 kind must be selected!
+			</div>
+        </div>
+		<div class="form-group">
+            <label for="ingredient" class="col-sm-2 control-label">Ingredients</label>
+            <div class="col-sm-5">
+				<dualselectlist id="ingredients" ng-Model="pizza.ingredients" options="i as i.name for i in ingredients" ></dualselectlist>
+				<input name="pizzaingredients" type="hidden" ng-model="pizza.ingredients" ng-required="true" check-compability empty-array/>
+            </div>
+			<div ng-show="pizzaForm.pizzaingredients.$error.incompatible" class="col-sm-5 alert alert-danger alert-dismissable">
+				The selected ingredients are not compatible with the selected kinds! Please, remove it!
+			</div>
+			<div ng-show="pizzaForm.pizzaingredients.$error.emptyarr" class="col-sm-5 alert alert-danger alert-dismissable">
+				At least 1 ingredient must be selected!
+			</div>
+        </div>
+        <div class="form-group">
+            <label for="image" class="col-sm-2 control-label">Image URL</label>
+            <div class="col-sm-5">
+                <input ng-model="pizza.image" ng-required="true"
+                    type="url" class="form-control" id="image" placeholder="Image URL">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="info" class="col-sm-2 control-label">Info</label>
+            <div class="col-sm-5">
+                <textarea ng-model="pizza.info" ng-maxlength="150" id="info"
+                    class="form-control" placeholder="Enter info"></textarea>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="price" class="col-sm-2 control-label">Price</label>
+            <div class="col-sm-2">
+                <div class="input-group">
+                    <span class="input-group-addon">฿</span>
+                    <input ng-model="pizza.price" ng-required="true" ng-pattern="/^(\d|\.)+$/"
+                        placeholder="0.00" type="text" id="price" class="form-control">
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-10">
+                <button type="submit" ng-disabled="pizzaForm.$invalid"
+                    class="btn btn-primary form-controll">Submit</button>
+            </div>
+        </div>
+     </form>
+    <hr />
+    	<div ng-controller="PageCtrl">
+        <table class="pizzas table table-hover table-bordered">
+            <thead>
+                <tr>
+                    <th>Image</th>
+                    <th>Name</th>
+                    <th>Kind</th>
+                    <th>Info</th>
+					<th>Ingredients</th>
+                    <th>Price</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tr ng-repeat="item in filtered = (pizzas | orderBy:name) | startFrom:(currentPage-1)*entryLimit | limitTo:entryLimit">
+                <td><img ng-src="{{ item.image }}" class="pizza-img img-responsive" /></td>
+                <td>{{item.name}}</td>
+				<td><p ng-repeat="kind in item.kinds"> {{kinds[kind.id-1].name}}</p></td>
+                <td>{{item.info}}</td>
+				<td><p ng-repeat="ingredient in item.ingredients"> {{ingredients[ingredient.id-1].name}}</p></td>
+                <td>{{item.price | bitcoin}}</td>
+                <td><button ng-click="remove(item.id)" class="btn btn-danger">Delete</button></td>
+            </tr>
+        </table>
+        <div>
+			<pagination ng-show="filtered.length>0" total-items="filtered.length" items-per-page="entryLimit" ng-model="currentPage" max-size="maxSize" class="pagination-sm" boundary-links="true" rotate="true"></pagination>
+			<p ng-hide="filtered.length!=0">Nothing to display, please add more pizzas.</p>
+		</div>
+        </div>
+    </div>
+</div>

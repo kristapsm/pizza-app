@@ -1,0 +1,67 @@
+<div class="ingredients-page">
+	<h2 class="col-sm-offset-5">Make a pizza</h2>
+	<hr/>
+	<div class="col-xs-12 col-sm-3">
+		<div class="panel panel-default">
+			<div class="panel-heading">
+				<h3 class="panel-title">Your pizza:</h3>
+			</div>
+			<div class="panel-body">
+				<form name="pizzaForm" ng-submit="submit()">
+					<div ng-show="submited" class="alert alert-{{ submited.type }} alert-dismissable">{{submited.msg}}</div>
+					<div class="form-group">
+						<input ng-required="true" ng-model="pizza.name" ng-maxlength="50"
+							ng-minlength="3" type="text" class="form-control" id="name"
+							placeholder="Enter pizza's name">
+					</div>
+					<div class="form-group">
+						<button class="btn btn-filter btn-success" type="button">Selected ingredients</button>
+						<ul class="form-control selectedIngredientsList" style="height: auto;">
+							<li ng-repeat="ingredient in pizza.ingredients" style="list-style: none" class="selected-list-animation">{{ingredient.name}}
+								<i class="pull-right glyphicon glyphicon-minus-sign" ng-click="removeIngredient(ingredient)"></i>
+							</li>
+						</ul>
+						<input name="pizzaingr" type="hidden" ng-model="pizza.ingredients" ng-required="true" empty-array/>
+						<span ng-show="pizzaForm.pizzaingr.$error.emptyarr" class="col-sm-12 alert alert-danger alert-dismissable">
+							At least 1 ingredient must be selected!
+						</span>
+					</div>
+					<div class="total">
+						<span>Total: <strong>{{pizza.price | number:5 | bitcoin}}</strong></span>
+					</div>
+					<div class="form-group">
+						<button type="submit" ng-disabled="pizzaForm.$invalid"
+							class="btn btn-filter btn-primary form-controll">Submit</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+	<div class="col-xs-12 col-sm-9">
+		<div class="col-sm-9 col-md-8">
+			<div class="pizza-area-tweet">
+				<ul id="pizza-area-list" ui-sortable="selectedIngrConfig" ng-model="pizza.ingredients" class="selectedIngredients" style="width: 500px; height: 500px;">
+					<li class="selected-image-animation" ng-repeat="ingredient in pizza.ingredients" style="list-style: none; position: absolute;" ng-style="{left: (ingredient.x + 'px'), top: (ingredient.y + 'px')}">
+						<img src='{{ingredient.image}}' width="80" height="80" />
+					</li>
+				</ul>
+			</div>
+		</div>
+		<div class="col-sm-6 col-md-4">
+			<div class="panel panel-default">
+				<div class="panel-heading-tweet">
+					<h3 class="panel-title">Top ingredients</h3>
+				</div>
+				<div class="panel-body">
+					<div class="form-group">
+						<ul ui-sortable="ingrConfig" ng-model="ingredients1" class="ingredients rounded-list">
+							<li id="{{ingredient.name}}" ng-repeat="ingredient in ingredients1 track by $index ">
+								<p>{{ingredient.name}} {{ingredient.rate*100 | number:2}}% [tweets: {{ingredient.count}}]</p>
+							</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

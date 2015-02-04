@@ -1,0 +1,102 @@
+<div class="row pizzas">
+	<div class="col-xs-12 col-sm-3">
+		<div class="panel panel-default">
+			<div class="panel-heading">
+				<h3 class="panel-title">Filter</h3>
+			</div>
+			<div class="panel-body">
+				<div class="form-group">
+					<input ng-model="search" class="form-control" id="name"
+						placeholder="Search">
+										<button id="clear-filter" class="btn btn-default btn-sm"
+					ng-click="clearFilters()" type="button">Clear Filters</button>
+				</div>
+
+			<div>
+				<accordion close-others="oneAtATime"> <accordion-group
+					is-open="kinds.open"> <accordion-heading>
+					<div>
+				Kinds <i class="pull-right glyphicon"
+					ng-class="{'glyphicon-chevron-down': kinds.open, 'glyphicon-chevron-right': !kinds.open}"></i>
+					</div>
+				</accordion-heading> <span ng-repeat="kind in kinds | orderBy:name"> <input
+					type="checkbox" id="kind" ng-model="checkbox.kinds[kind.id]"
+					ng-change="onChange(checkbox.kinds[kind.id])" indeterminate>
+					<label
+					ng-class="{selectedTrue: checkbox.kinds[kind.id]===true, selectedExclude: checkbox.kinds[kind.id]==='exclude'}">{{kind.name}}</label>
+					<br />
+				</span> </accordion-group> <accordion-group is-open="ingr.open"> <accordion-heading>
+				Ingredients <i class="pull-right glyphicon"
+					ng-class="{'glyphicon-chevron-down': ingr.open, 'glyphicon-chevron-right': !ingr.open}"></i>
+				</accordion-heading> <span ng-repeat="ingredient in ingredients | orderBy:name">
+					<input type="checkbox" id="ingredient"
+					ng-model="checkbox.ingredients[ingredient.id]"
+					ng-change="onChange(checkbox.ingredients[ingredient.id])"
+					indeterminate> <label
+					ng-class="{selectedTrue: checkbox.ingredients[ingredient.id]===true, selectedExclude: checkbox.ingredients[ingredient.id]==='exclude'}">{{ingredient.name}}</label>
+					<br />
+				</span> </accordion-group> </accordion>
+</div>
+
+			</div>
+		</div>
+		<div ng-show="cart.items.length" class="panel cart panel-success">
+			<div class="panel-heading">
+				<h3 class="panel-title">Your order:</h3>
+			</div>
+			<div class="panel-body">
+				<div ng-repeat="item in cart.items" class="row items">
+					<div class="col-md-4">{{ item.pizza.name }}</div>
+					<div class="col-md-2">{{ item.qty }}</div>
+					<div class="col-md-4">{{ item.pizza.price/rate | number:4 |
+						bitcoin}}</div>
+					<div class="col-md-2">
+						<button ng-click="remove(item)" class="btn btn-default btn-xs">&#x2717;</button>
+					</div>
+				</div>
+				<div class="total">
+					<span>Total: <strong>{{ cart.total()/rate |
+							number:4 | bitcoin }}</strong></span>
+				</div>
+
+				<button ng-click="checkout()" class="btn btn-success">Checkout</button>
+			</div>
+		</div>
+	</div>
+	<div class="col-xs-12 col-sm-9" ng-controller="PageCtrl">
+		<div class="row">
+			<div
+				ng-repeat="item in filtered = ( pizzas | filter: query | filter: search | checkboxFilter: checkbox | filter: {kind:kind.id} | orderBy:id) | startFrom:(currentPage-1)*entryLimit | limitTo:entryLimit"
+				class="col-sm-6 col-md-4">
+				<div class="panel pizza panel-default">
+					<div class="panel-body">
+						<img ng-src="{{ item.image }}" class="pizza-img img-responsive" />
+						<h4>
+							{{item.name}} <span class="label label-info"
+								ng-repeat="kind in item.kinds">{{kinds[kind.id-1].name}}</span>
+						</h4>
+						<p>{{item.info}}</p>
+
+						<div class="btn-group buy">
+							<button type="button" class="btn btn-default active">
+								<strong class="pos_top">{{item.price/rate | number:5 | bitcoin}}</strong><small class="pos_down"
+									ng-class="{'green' : arrow == 1, 'red' : arrow == -1}"><span
+									ng-if="arrow === -1">{{"+"}}</span>{{change(item.price)|
+									number:6 }}</small>
+							</button>
+							<button ng-click="add(item)" class="btn btn-success">Add</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div>
+			<pagination ng-show="filtered.length>0" total-items="filtered.length"
+				items-per-page="entryLimit" ng-model="currentPage"
+				max-size="maxSize" class="pagination-sm" boundary-links="true"
+				rotate="true"></pagination>
+			<p ng-hide="filtered.length!=0">Nothing to display, please try
+				different filtering parameters.</p>
+		</div>
+	</div>
+</div>

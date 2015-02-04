@@ -1,0 +1,155 @@
+// run application: gradle grails-run-app
+// build war file: gradle war
+buildscript {
+    repositories {
+        maven { url "https://javax.accenture.lv/nexus/content/groups/public/" }
+        jcenter()
+        mavenCentral()
+    }
+    dependencies { classpath "org.grails:grails-gradle-plugin:2.0.1",  "com.bmuschko:gradle-cargo-plugin:2.0.1", "org.cloudfoundry:cf-gradle-plugin:1.0.3"  }
+}
+
+//project version
+version "1.0"
+
+apply plugin: "grails"
+apply plugin: "maven"
+// used for hot app deploy on independent tomcat container
+apply plugin: "com.bmuschko.cargo-base"
+apply plugin: "sonar-runner"
+apply plugin: 'cloudfoundry'
+
+grails {
+    grailsVersion = '2.3.7'
+    groovyVersion = '2.2.2'
+}
+
+repositories {
+    maven { url "https://javax.accenture.lv/nexus/content/groups/public/" }
+    grails.central()
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+    runtime 'org.springframework:spring-core:3.2.11.RELEASE',
+                    'org.springframework:spring-aop:3.2.11.RELEASE'
+    runtime "mysql:mysql-connector-java:5.1.27"
+    compile "io.vertx:vertx-platform:2.1"
+    compile "com.pusher:pusher-java-client:0.3.1"
+	compile "org.gmock:gmock:0.8.3"
+    compile "com.firebase:firebase-client:1.0.5"
+    compile "org.apache.httpcomponents:httpclient:4.3.2"
+    compile "org.grails.plugins:scaffolding:2.0.2"
+    runtime ("org.grails.plugins:hibernate:3.6.10.9") { exclude module: 'xml-apis' }
+    runtime "org.grails.plugins:jquery:1.11.0.2"
+    runtime "org.grails.plugins:resources:1.2.7"
+	compile "org.grails.plugins:spring-security-core:2.0-RC4"
+	compile ("org.grails.plugins:spring-security-rest:1.4.1.RC1") {exclude module: 'spring-security-core'}
+    runtime ("org.springframework.social:spring-social-twitter:1.1.0.RELEASE") {
+        exclude group: 'org.springframework', module: 'spring-core'
+        exclude group: 'org.springframework', module: 'spring-web'
+        exclude group: 'org.springframework', module: 'spring-webmvc'
+    }
+    compile "org.codehaus.jackson:jackson-mapper-asl:1.9.13"
+    bootstrap "org.grails.plugins:tomcat:7.0.52.1"
+    // cargo
+    def cargoVersion = '1.4.5'
+    cargo "org.codehaus.cargo:cargo-core-uberjar:$cargoVersion",
+                    "org.codehaus.cargo:cargo-ant:$cargoVersion"
+	// Spring Cloud
+    compile "org.springframework.cloud:spring-cloud-spring-service-connector:1.0.0.RELEASE"
+    compile "org.springframework.cloud:spring-cloud-cloudfoundry-connector:1.0.0.RELEASE"
+}
+
+//plugins { id 'net.saliman.properties' version '1.4.2' }
+
+import org.grails.gradle.plugin.tasks.GrailsTask
+task war(type: GrailsTask) { command "war" }
+
+tasks.withType(org.grails.gradle.plugin.tasks.GrailsTask) { Task t ->
+	t.jvmOptions {
+		jvmArgs ("-XX:MaxPermSize=256m")
+	}
+}
+
+import com.bmuschko.gradle.cargo.tasks.remote.CargoDeployRemote
+import com.bmuschko.gradle.cargo.convention.Deployable
+
+// cargo + grails settings
+Properties grailsProperties = new Properties()
+File grailsFile = new File("application.properties")
+grailsFile.withInputStream { grailsProperties.load(it) }
+
+def serverHostname = "localhost"
+def serverPort = 8080
+def serverLogin = "admin"
+def serverPassword = "admin"
+def appContext = grailsProperties.getProperty("app.name")
+def appVersion = grailsProperties.getProperty("app.version")
+
+task deployToRemote(type: CargoDeployRemote) {
+    containerId = "tomcat7x"
+    hostname = serverHostname
+    port = serverPort
+    username = serverLogin
+    password = serverPassword
+    // TODO use 'gradle-properties-plugin' to use environment specific settings in "gradle-${environmentName}.properties" files
+    // https://github.com/stevesaliman/gradle-properties-plugin
+    deployables = [
+        new Deployable(file: file("target/${appContext}-${appVersion}.war"), context: appContext)
+    ]
+}
+import org.grails.gradle.plugin.tasks.GrailsTestTask
+task 'grails-test-app-unit'(type: GrailsTestTask){
+	phases = ["unit:"]
+}
+
+// create war file and deploy
+deployToRemote.mustRunAfter war
+task buildAndDeployToRemote(dependsOn: ['war', 'deployToRemote'])
+
+task 'grails-run-app-prod'(type: GrailsTask) {
+  command = 'run-app'
+  env = 'prod'
+}
+
+test.dependsOn.remove("grails-test-app")
+
+sonarRunner {
+  sonarProperties {
+    //these must be set from command line:
+    //property "sonar.branch", "peperoni"
+    //property "sonar.login", "admin"
+    //property "sonar.password", "admin"
+
+    property "sonar.host.url", "https://javax.accenture.lv/sonar"
+    property "sonar.jdbc.url", "jdbc:mysql://javax.accenture.lv:3306/sonar?autoReconnect=true&useUnicode=true&characterEncoding=utf8"
+    property "sonar.jdbc.driverClassName", "com.mysql.jdbc.Driver"
+    property "sonar.jdbc.username", "sonar"
+    property "sonar.jdbc.password", "sonar"
+    
+    //property "sonar.language", "grvy" // set language to Groovy
+    
+    property "sonar.projectName", "valhalla"
+    property "sonar.projectKey", "valhalla"
+    property "sonar.projectVersion", "${appVersion}"
+    property "sonar.sources", "src/java"
+    property "sonar.tests", "test/unit"
+    property "sonar.binaries", "build/classes"
+    property "sonar.junit.reportsPath", "build/test-results"
+    //libraries=lib/*.jar
+    property "sonar.java.source", "1.7"
+    property "sonar.java.target", "1.7"
+  }
+} 
+
+cloudfoundry {
+    target = "https://api.run.pivotal.io"
+    space = "development"
+
+    file = file("target/pizza-app-0.1.1.war")
+    uri = "pizza-app-acc.cfapps.io"
+    memory = 512
+    instances = 1
+}

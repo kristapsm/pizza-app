@@ -1,0 +1,7 @@
+---
+applications:
+- name: pizza-app
+  memory: 512M
+  instances: 1
+  host: pizza-app-acc
+  path: target/pizza-app-0.1.1.war

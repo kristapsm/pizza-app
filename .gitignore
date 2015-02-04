@@ -1,0 +1,21 @@
+# Eclipse
+/target/
+/target-eclipse/
+/node_modules/
+*target*
+*.class
+*.jar
+*.war
+.classpath
+.project
+.settings/
+/twitter.properties
+node_modules/
+.settings/
+npm-debug.*
+/test/javascript/unit/coverage/
+/bin/
+/build/
+/buildPlugins/
+.gradle/
+/web-app/images/pizza-Images/

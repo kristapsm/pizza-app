@@ -1,0 +1,30 @@
+{
+  "name": "PizzaApp",
+  "description": "Spectacular Test Runner for JavaScript.",
+  "keywords": [
+    "Pizza",
+    "vertx",
+    "angularjs",
+    "grails",
+    "gradle",
+    "javascript"
+  ],
+  "author": {
+    "name": "Accenture",
+    "email": "janis.hofmanis@accenture.com"
+  },
+  "devDependencies": {
+    "karma": "*",
+    "karma-jasmine": "~0.1.0",
+    "karma-coverage": "*",
+    "karma-chrome-launcher": "*",
+    "karma-firefox-launcher": "*",
+    "karma-phantomjs-launcher": "*"
+  },
+  "main": "./grails-app/views/index.gsp",
+  "bin": {},
+  "engines": {
+    "node": "~0.8 || ~0.10"
+  },
+  "version": "1.0.1"
+}
